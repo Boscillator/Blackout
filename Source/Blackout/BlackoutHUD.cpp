@@ -6,7 +6,9 @@
 #include "TextureResource.h"
 #include "CanvasItem.h"
 #include "Engine/World.h"
+#include "GameFramework/HUD.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Blueprint/UserWidget.h"
 
 ABlackoutHUD::ABlackoutHUD()
 {
@@ -16,6 +18,22 @@ ABlackoutHUD::ABlackoutHUD()
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> GameOverTexObj(TEXT("/Game/UI/GameOver"));
 	GameOverTex = GameOverTexObj.Object;
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> HealthBarObj(TEXT("/Game/UI/IngameHud"));
+	HUDWidgetClass = HealthBarObj.Class;
+}
+
+void ABlackoutHUD::BeginPlay()
+{
+	if (HUDWidgetClass != nullptr)
+	{
+		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
+
+		if (CurrentWidget)
+		{
+			CurrentWidget->AddToViewport();
+		}
+	}
 }
 
 

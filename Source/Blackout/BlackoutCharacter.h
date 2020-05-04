@@ -112,6 +112,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Ammo")
 	FORCEINLINE int GetAmmo() const { return Ammo; }
 
+	UFUNCTION(BlueprintPure, Category = "Ammo")
+	FORCEINLINE int GetClipSize() const { return ClipSize; }
+
 	/** Setter for Current Health. Clamps the value between 0 and MaxHealth and calls OnHealthUpdate. Should only be called on the server.*/
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetCurrentHealth(int healthValue);

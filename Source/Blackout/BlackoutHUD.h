@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "Blueprint/UserWidget.h"
 #include "BlackoutHUD.generated.h"
 
 UCLASS()
@@ -18,6 +19,15 @@ public:
 	virtual void DrawHUD() override;
 
 	void DrawGameOver();
+
+protected:
+	void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> HUDWidgetClass;
+
+	UPROPERTY(EditAnywhere)
+	class UUserWidget* CurrentWidget;
 
 private:
 

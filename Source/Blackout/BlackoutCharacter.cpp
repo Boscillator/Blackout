@@ -371,7 +371,4 @@ void ABlackoutCharacter::SetAmmo(int ammoValue)
 	}
 }
 
-void ABlackoutCharacter::OnAmmoUpdate() {
-	FString msg = FString::Printf(TEXT("%d ammo remains."), Ammo);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, msg);
-}
+void ABlackoutCharacter::OnAmmoUpdate() {}
