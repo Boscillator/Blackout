@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "BlackoutCharacter.h"
 #include "BlackoutGameMode.generated.h"
 
 UCLASS(minimalapi)
@@ -13,6 +14,7 @@ class ABlackoutGameMode : public AGameModeBase
 
 public:
 	ABlackoutGameMode();
+	void RespawnPlayer(ABlackoutCharacter* pawn);
 };
 
 

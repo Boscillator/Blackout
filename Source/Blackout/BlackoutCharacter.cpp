@@ -15,6 +15,7 @@
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "BlackoutGameMode.h"
 #include "GameFramework/GameModeBase.h"
 
 
@@ -249,17 +250,20 @@ float ABlackoutCharacter::TakeDamage(float DamageTaken, struct FDamageEvent cons
 }
 
 void ABlackoutCharacter::Die_Implementation() {
-	AGameModeBase* gameMode = GetWorld()->GetAuthGameMode();
-	AActor* spawnPoint = gameMode->FindPlayerStart(this->GetController());
-
-
-	SetActorLocation(spawnPoint->GetActorLocation(), false);
-	CurrentHealth = MaxHealth;
-	OnHealthUpdate();
+	ABlackoutGameMode* gameMode = dynamic_cast<ABlackoutGameMode*>(GetWorld()->GetAuthGameMode());
+	if (gameMode) {
+		gameMode->RespawnPlayer(this);
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!ABlackoutCharacter must be used with ABlackoutGameMode or subclass. Tell Fred if you ever see this message."));
+	}
 
 	APlayerController* playerController = dynamic_cast<APlayerController*>(GetController());
 	if (playerController) {
 		DieAnimation(playerController->GetName());
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!Tried to kill a non-player pawn. Tell Fred if you ever see this message."));
 	}
 	
 }

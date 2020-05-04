@@ -4,6 +4,8 @@
 #include "BlackoutHUD.h"
 #include "BlackoutCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerStart.h"
 
 ABlackoutGameMode::ABlackoutGameMode()
 	: Super()
@@ -14,4 +16,14 @@ ABlackoutGameMode::ABlackoutGameMode()
 
 	// use our custom HUD class
 	HUDClass = ABlackoutHUD::StaticClass();
+}
+
+void ABlackoutGameMode::RespawnPlayer(ABlackoutCharacter* pawn) {
+	pawn->SetCurrentHealth(pawn->MaxHealth);
+	TArray<AActor*> spawn_points;
+	UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), spawn_points);
+	int spawn_index = FMath::RandRange(0, spawn_points.Num() - 1);	// Who makes a random number generate right inclusive?
+	AActor* spawn = spawn_points[spawn_index];
+
+	pawn->SetActorLocation(spawn->GetActorLocation());
 }
