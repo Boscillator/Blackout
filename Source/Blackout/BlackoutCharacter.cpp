@@ -16,6 +16,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "BlackoutGameMode.h"
+#include "BlackoutHud.h"
 #include "GameFramework/GameModeBase.h"
 
 
@@ -273,6 +274,20 @@ void ABlackoutCharacter::DieAnimation_Implementation(const FString& name) {
 	{
 		FString deathMessage = FString::Printf(TEXT("You have been killed."));
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+
+		APlayerController* playerController = dynamic_cast<APlayerController*>(GetController());
+		if (playerController) {
+			ABlackoutHUD* hud = dynamic_cast<ABlackoutHUD*>(playerController->GetHUD());
+			if (hud) {
+				hud->DrawGameOver();
+			}
+			else {
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!Must use ABlackoutHud. Tell Fred if you ever see this message."));
+			}
+		}
+		else {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!Tried to display death for non-player pawn. Tell Fred if you ever see this message."));
+		}
 	}
 
 	FString deathMessage = FString::Printf(TEXT("%s has been blacked out."), *name);
@@ -323,7 +338,7 @@ void ABlackoutCharacter::SetCurrentHealth(int healthValue)
 {
 	if (Role == ROLE_Authority)
 	{
-		if (healthValue < MaxHealth) {
+		if (healthValue <= MaxHealth) {
 			CurrentHealth = healthValue;
 		}
 		OnHealthUpdate();
