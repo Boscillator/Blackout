@@ -26,4 +26,5 @@ void ABlackoutGameMode::RespawnPlayer(ABlackoutCharacter* pawn) {
 	AActor* spawn = spawn_points[spawn_index];
 
 	pawn->SetActorLocation(spawn->GetActorLocation());
+	pawn->SetAmmo(pawn->ClipSize);
 }

@@ -6,7 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h"
 #include "Engine/StaticMesh.h"
+#include "BlackoutCharacter.h"
 #include "Powerup.generated.h"
+
 
 UCLASS()
 class BLACKOUT_API APowerup : public AActor
@@ -27,23 +29,33 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Gameplay")
 	float RespawnTime = 4.f;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	class USphereComponent* TriggerSphere;
 
 	UFUNCTION()
-	void OnTrigger(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnTrigger(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void Respawn();
 
 	void SetVisible(bool state);
 	bool GetVisible() { return isVisible; }
+	void OnVisibilityUpdate();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Visibility)
+	bool isVisible = true;
 
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	void GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const override;
 
 private:
+
+	virtual void Powerup(ABlackoutCharacter* character);
+
 	FTimerHandle respawnTimer;
-	bool isVisible = true;
+	
+	UFUNCTION()
+	void OnRep_Visibility();
 };

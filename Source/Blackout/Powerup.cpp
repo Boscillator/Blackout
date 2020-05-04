@@ -2,6 +2,7 @@
 
 
 #include "Powerup.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 APowerup::APowerup()
@@ -13,6 +14,8 @@ APowerup::APowerup()
 	TriggerSphere->InitSphereRadius(TriggerRadius);
 	TriggerSphere->SetGenerateOverlapEvents(true);
 	TriggerSphere->OnComponentBeginOverlap.AddDynamic(this, &APowerup::OnTrigger);
+	TriggerSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	// TriggerSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	RootComponent = TriggerSphere;
 
 }
@@ -32,14 +35,22 @@ void APowerup::Tick(float DeltaTime)
 
 void APowerup::OnTrigger(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	//if (Role != ROLE_Authority) {
+	//	// Only the server should respond to triggers
+	//	return;
+	//}
+
 	if (!GetVisible()) {
 		// Do nothing if the powerup is not active
 		return;
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, TEXT("Power Up Noises"));
-	SetVisible(false);
+	ABlackoutCharacter* character = dynamic_cast<ABlackoutCharacter*>(OtherActor);
+	if (!character) {
+		return;
+	}
 
+	SetVisible(false);
 	UWorld* world = GetWorld();
 	if (world) {
 		world->GetTimerManager().SetTimer(respawnTimer, this, &APowerup::Respawn, RespawnTime, false);
@@ -47,11 +58,18 @@ void APowerup::OnTrigger(UPrimitiveComponent* OverlappedComp, AActor* OtherActor
 	else {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!Attempted to trigger powerup when not spawned. Tell Fred if you ever see this message."));
 	}
+
+	Powerup(character);
 }
 
 void APowerup::SetVisible(bool state) {
-	this->SetActorHiddenInGame(!state);
 	isVisible = state;
+	OnVisibilityUpdate();
+}
+
+void APowerup::OnVisibilityUpdate()
+{
+	this->SetActorHiddenInGame(!isVisible);
 }
 
 void APowerup::Respawn()
@@ -59,4 +77,19 @@ void APowerup::Respawn()
 	SetVisible(true);
 }
 
+void APowerup::Powerup(ABlackoutCharacter* character) {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!void powerup. Tell Fred if you ever see this message."));
+}
 
+void APowerup::OnRep_Visibility()
+{
+	OnVisibilityUpdate();
+}
+
+void APowerup::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//Replicate current health.
+	DOREPLIFETIME(APowerup, isVisible);
+}

@@ -108,6 +108,7 @@ void ABlackoutCharacter::BeginPlay()
 		world->GetTimerManager().SetTimer(footstepHandler, this, &ABlackoutCharacter::OnFootstep, footStepRate, true);
 	}
 	
+	SetAmmo(ClipSize);
 	OnHealthUpdate();
 }
 
@@ -117,6 +118,7 @@ void ABlackoutCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& 
 
 	//Replicate current health.
 	DOREPLIFETIME(ABlackoutCharacter, CurrentHealth);
+	DOREPLIFETIME(ABlackoutCharacter, Ammo);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -149,6 +151,11 @@ void ABlackoutCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 
 void ABlackoutCharacter::OnFire()
 {
+
+	if (GetAmmo() <= 0) {
+		// No ammo, can't shoot
+		return;
+	}
 
 	if (timeSinceLastShot < fireRate) {
 		// Do nothing if you have shot recently.
@@ -197,6 +204,7 @@ void ABlackoutCharacter::DoFire_Implementation()
 		// spawn the projectile at the muzzle
 		World->SpawnActor<ABlackoutProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 
+		SetAmmo(GetAmmo() - 1);
 		DoFireAnimation();
 	}
 }
@@ -317,6 +325,11 @@ void ABlackoutCharacter::OnRep_CurrentHealth()
 	OnHealthUpdate();
 }
 
+void ABlackoutCharacter::OnRep_Ammo()
+{
+	OnAmmoUpdate();
+}
+
 void ABlackoutCharacter::OnHealthUpdate()
 {
 	//Client-specific functionality
@@ -345,4 +358,20 @@ void ABlackoutCharacter::SetCurrentHealth(int healthValue)
 		}
 		OnHealthUpdate();
 	}
+}
+
+void ABlackoutCharacter::SetAmmo(int ammoValue)
+{
+	if (Role == ROLE_Authority)
+	{
+		if (0 <= ammoValue && ammoValue <= ClipSize) {
+			Ammo = ammoValue;
+		}
+		OnAmmoUpdate();
+	}
+}
+
+void ABlackoutCharacter::OnAmmoUpdate() {
+	FString msg = FString::Printf(TEXT("%d ammo remains."), Ammo);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, msg);
 }

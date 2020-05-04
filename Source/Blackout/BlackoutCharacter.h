@@ -109,9 +109,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Health")
 	FORCEINLINE int GetCurrentHealth() const { return CurrentHealth; }
 
+	UFUNCTION(BlueprintPure, Category = "Ammo")
+	FORCEINLINE int GetAmmo() const { return Ammo; }
+
 	/** Setter for Current Health. Clamps the value between 0 and MaxHealth and calls OnHealthUpdate. Should only be called on the server.*/
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetCurrentHealth(int healthValue);
+
+	UFUNCTION(BlueprintCallable, Category = "Ammo")
+	void SetAmmo(int ammoValule);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	float fireRate;
@@ -141,6 +147,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	int MaxHealth;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
+	int ClipSize = 6;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	int NotifyAtHealth;
 
@@ -154,10 +163,16 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
 	int CurrentHealth;
 
+	UPROPERTY(ReplicatedUsing = OnRep_Ammo)
+	int Ammo;
+
 
 	/** RepNotify for changes made to current health.*/
 	UFUNCTION()
 	void OnRep_CurrentHealth();
+
+	UFUNCTION()
+	void OnRep_Ammo();
 
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -173,6 +188,7 @@ protected:
 	void DoFireAnimation();
 
 	void OnHealthUpdate();
+	void OnAmmoUpdate();
 
 private:
 	float timeSinceLastShot;
