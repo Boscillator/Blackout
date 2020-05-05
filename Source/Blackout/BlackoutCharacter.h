@@ -99,6 +99,7 @@ protected:
 	/**
 	* Called when the pause key is pressed
 	*/
+	UFUNCTION(BlueprintCallable)
 	void Pause();
 	
 protected:

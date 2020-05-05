@@ -10,6 +10,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/UserWidget.h"
+#include "BlackoutCharacter.h"
 
 ABlackoutHUD::ABlackoutHUD()
 {
