@@ -70,6 +70,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	class UAnimMontage* FireAnimation;
 
+	/**
+	* Called when the pause key is pressed
+	*/
+	UFUNCTION(BlueprintCallable)
+	void Pause();
+
 protected:
 	
 	/** Fires a projectile. */
@@ -96,11 +102,7 @@ protected:
 	void Turn(float rate);
 	void LookUp(float val);
 
-	/**
-	* Called when the pause key is pressed
-	*/
-	UFUNCTION(BlueprintCallable)
-	void Pause();
+
 	
 protected:
 	// APawn interface
