@@ -87,6 +87,9 @@ ABlackoutCharacter::ABlackoutCharacter()
 
 	// Set default ammo
 	ClipSize = 6;
+
+	// Set default sensitivity
+	LookSpeedScaler = 1.f;
 }
 
 void ABlackoutCharacter::BeginPlay()
@@ -276,7 +279,7 @@ void ABlackoutCharacter::TurnAtRate(float Rate)
 	}
 
 	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	AddControllerYawInput(LookSpeedScaler * Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void ABlackoutCharacter::LookUpAtRate(float Rate)
@@ -286,7 +289,7 @@ void ABlackoutCharacter::LookUpAtRate(float Rate)
 	}
 
 	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	AddControllerPitchInput(LookSpeedScaler * Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
 void ABlackoutCharacter::Turn(float val)
@@ -295,7 +298,7 @@ void ABlackoutCharacter::Turn(float val)
 		return;
 	}
 
-	AddControllerYawInput(val);
+	AddControllerYawInput(LookSpeedScaler * val);
 }
 
 void ABlackoutCharacter::LookUp(float val)
@@ -304,7 +307,7 @@ void ABlackoutCharacter::LookUp(float val)
 		return;
 	}
 
-	AddControllerPitchInput(val);
+	AddControllerPitchInput(LookSpeedScaler * val);
 }
 
 
