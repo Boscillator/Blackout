@@ -16,6 +16,9 @@ class ABlackoutProjectile : public AActor
 	UPROPERTY(VisibleDefaultsOnly, Category=Projectile)
 	class USphereComponent* CollisionComp;
 
+	UPROPERTY(EditAnywhere, Category = Projectile)
+	float Speed = 10000.f;
+
 	/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	class UProjectileMovementComponent* ProjectileMovement;

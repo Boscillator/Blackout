@@ -71,19 +71,22 @@ ABlackoutCharacter::ABlackoutCharacter()
 	// are set in the derived blueprint asset named MyCharacter to avoid direct content references in C++.
 
 	// Create Local Flashlight
-	PointLight1 = CreateDefaultSubobject<UPointLightComponent>(TEXT("PointLight1"));
-	PointLight1->SetIsReplicated(false);
-	PointLight1->Intensity = 50.f;
-	PointLight1->SetAttenuationRadius(400.f);
-	PointLight1->SetupAttachment(RootComponent);
-	PointLight1->bVisible = true;
+	PersonalLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("PersonalLight"));
+	PersonalLight->SetIsReplicated(false);
+	PersonalLight->Intensity = 50.f;
+	PersonalLight->SetAttenuationRadius(400.f);
+	PersonalLight->SetupAttachment(RootComponent);
+	PersonalLight->bVisible = true;
 
-	// Health
+	// Set default health
 	MaxHealth = 2;
 	CurrentHealth = MaxHealth;
 	NotifyAtHealth = 1;
 	FullHeathColor = FLinearColor::White;
 	LowHealthColor = FLinearColor::Red;
+
+	// Set default ammo
+	ClipSize = 6;
 }
 
 void ABlackoutCharacter::BeginPlay()
@@ -99,16 +102,21 @@ void ABlackoutCharacter::BeginPlay()
 
 	// Disable every else's flashlight
 	if (!IsLocallyControlled()) {
-		PointLight1->SetHiddenInGame(true);
-
+		// The code here only runs on the computer which owns this actor (the computer of the player controlling this character)
+		PersonalLight->SetHiddenInGame(true);
 	}
 
+	// Set up a time manager.
 	UWorld* world = GetWorld();
 	if (world) {
+		// For some reason GetWorld() can return null, so we had better check for it so we don't get a seg-fault. We have to do that alot in this code
 		world->GetTimerManager().SetTimer(footstepHandler, this, &ABlackoutCharacter::OnFootstep, footStepRate, true);
 	}
 	
+	// Start player with 6 clips
 	SetAmmo(ClipSize);
+
+	// Update health once so the lights update
 	OnHealthUpdate();
 }
 
@@ -116,7 +124,7 @@ void ABlackoutCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//Replicate current health.
+	// This tells Unreal that we want to synchronize these values. 
 	DOREPLIFETIME(ABlackoutCharacter, CurrentHealth);
 	DOREPLIFETIME(ABlackoutCharacter, Ammo);
 }
@@ -126,6 +134,8 @@ void ABlackoutCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& 
 
 void ABlackoutCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
+	// All auto generated stuff that just works
+
 	// set up gameplay key bindings
 	check(PlayerInputComponent);
 
@@ -166,13 +176,10 @@ void ABlackoutCharacter::OnFire()
 	// try and fire a projectile
 	if (ProjectileClass != NULL)
 	{
+		// We want the actual shot to run on the server, so we call an RPC to run it there.
 		DoFire();
 		timeSinceLastShot = 0;
 	}
-
-	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Here"));
-
-
 
 	// try and play a firing animation if specified
 	if (FireAnimation != NULL)
@@ -204,12 +211,17 @@ void ABlackoutCharacter::DoFire_Implementation()
 		// spawn the projectile at the muzzle
 		World->SpawnActor<ABlackoutProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 
+		// Decrease the players ammo by one
 		SetAmmo(GetAmmo() - 1);
+
+		// Call DoFireAnimation on all clients to play the sound and what-not
 		DoFireAnimation();
 	}
 }
 
 void ABlackoutCharacter::DoFireAnimation_Implementation() {
+	// Called on all clients
+
 	// try and play the sound if specified
 	if (FireSound != NULL)
 	{
@@ -250,9 +262,9 @@ void ABlackoutCharacter::LookUpAtRate(float Rate)
 
 
 float ABlackoutCharacter::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) {
-	// FString deathMessage = FString::Printf(TEXT("Intesgator %x. Me %x"), EventInstigator, GetController());
-	// GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, deathMessage);
+	// Don't allow self-damage
 	if (GetController() != EventInstigator) {
+		// Decrement and apply health
 		int damageApplied = CurrentHealth - DamageTaken;
 		SetCurrentHealth(damageApplied);
 		return damageApplied;
@@ -260,35 +272,38 @@ float ABlackoutCharacter::TakeDamage(float DamageTaken, struct FDamageEvent cons
 	return 0;
 }
 
+// Called on the server when the character dies
 void ABlackoutCharacter::Die_Implementation() {
+
+	// Game mode is respawnable for handling respawning, get it.
 	ABlackoutGameMode* gameMode = dynamic_cast<ABlackoutGameMode*>(GetWorld()->GetAuthGameMode());
 	if (gameMode) {
 		gameMode->RespawnPlayer(this);
 	}
 	else {
+		// Something when wrong
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!ABlackoutCharacter must be used with ABlackoutGameMode or subclass. Tell Fred if you ever see this message."));
 	}
 
+	// For legacy reasons, we need to get the play controller, I wounder if this will change
 	APlayerController* playerController = dynamic_cast<APlayerController*>(GetController());
 	if (playerController) {
-		DieAnimation(playerController->GetName());
+		DieAnimation(playerController->GetPlayerNetworkAddress());
 	}
 	else {
+		// This shouldn't happen. Did someone try to implement AI?
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!Tried to kill a non-player pawn. Tell Fred if you ever see this message."));
 	}
 	
 }
 
 void ABlackoutCharacter::DieAnimation_Implementation(const FString& name) {
+	// Only display the death message on the controlling player's computer
 	if (IsLocallyControlled())
 	{
-		FString deathMessage = FString::Printf(TEXT("You have been killed."));
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
-
-		APlayerController* playerController = dynamic_cast<APlayerController*>(GetController());
-		if (playerController) {
-			ABlackoutHUD* hud = dynamic_cast<ABlackoutHUD*>(playerController->GetHUD());
-			if (hud) {
+		// Make sure both the controller and hud are correct, otherwise something is wrong
+		if (APlayerController* playerController = dynamic_cast<APlayerController*>(GetController())) {
+			if (ABlackoutHUD* hud = dynamic_cast<ABlackoutHUD*>(playerController->GetHUD())) {
 				hud->DrawGameOver();
 			}
 			else {
@@ -300,6 +315,7 @@ void ABlackoutCharacter::DieAnimation_Implementation(const FString& name) {
 		}
 	}
 
+	// Display death message
 	FString deathMessage = FString::Printf(TEXT("%s has been blacked out."), *name);
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
 
@@ -313,6 +329,8 @@ void ABlackoutCharacter::Tick(float deltaTime) {
 }
 
 void ABlackoutCharacter::OnFootstep() {
+	// Called at regular intervals to play footsteps.
+
 	if (GetVelocity().Size() > footStepMinVelocity && GetCharacterMovement()->IsWalking()) {
 		if (FootStep != NULL) {
 			UGameplayStatics::PlaySoundAtLocation(this, FootStep, GetActorLocation());
@@ -335,13 +353,15 @@ void ABlackoutCharacter::OnHealthUpdate()
 	//Client-specific functionality
 	if (IsLocallyControlled())
 	{
+		// Update the lighting
 		if (CurrentHealth > NotifyAtHealth) {
-			PointLight1->SetLightColor(FullHeathColor);
+			PersonalLight->SetLightColor(FullHeathColor);
 		}
 		else {
-			PointLight1->SetLightColor(LowHealthColor);
+			PersonalLight->SetLightColor(LowHealthColor);
 		}
 
+		// Die if you should
 		if (CurrentHealth <= 0)
 		{
 			Die();

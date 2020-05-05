@@ -4,6 +4,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "BlackoutCharacter.h"
 
 
 ABlackoutProjectile::ABlackoutProjectile()
@@ -27,13 +28,13 @@ ABlackoutProjectile::ABlackoutProjectile()
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = 5000.f;
-	ProjectileMovement->MaxSpeed = 5000.f;
+	ProjectileMovement->InitialSpeed = Speed;
+	ProjectileMovement->MaxSpeed = Speed;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = true;
 
 	// Die after 3 seconds by default
-	InitialLifeSpan = 3.0f;
+	InitialLifeSpan = 1.0f;
 }
 
 void ABlackoutProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -52,5 +53,11 @@ void ABlackoutProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 		UGameplayStatics::PlaySoundAtLocation(this, DissipateSound, GetActorLocation());
 	}
 	dissipating = true;
-	SetLifeSpan(.2f);
+
+	if (dynamic_cast<ABlackoutCharacter*>(OtherActor)) {
+		Destroy();
+	}
+	else {
+		SetLifeSpan(.2f);
+	}
 }

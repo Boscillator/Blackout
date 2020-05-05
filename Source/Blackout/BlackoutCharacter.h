@@ -31,14 +31,19 @@ class ABlackoutCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FirstPersonCameraComponent;
 
+	/** The light which lights up the immediate surroundings around the player. Only visible to the owner. */
 	UPROPERTY(VisibleAnywhere, Category = "Switch Components")
-	class UPointLightComponent* PointLight1;
+	class UPointLightComponent* PersonalLight;
 
 public:
 	ABlackoutCharacter();
 
 protected:
+	/** Called when the game launches */
 	virtual void BeginPlay();
+
+	/** Called once every tick */
+	void Tick(float deltaTime) override;
 
 public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
@@ -109,9 +114,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Health")
 	FORCEINLINE int GetCurrentHealth() const { return CurrentHealth; }
 
+	/** Getter for Current Ammo. */
 	UFUNCTION(BlueprintPure, Category = "Ammo")
 	FORCEINLINE int GetAmmo() const { return Ammo; }
 
+	/** Getter for the clip size */
 	UFUNCTION(BlueprintPure, Category = "Ammo")
 	FORCEINLINE int GetClipSize() const { return ClipSize; }
 
@@ -119,30 +126,39 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetCurrentHealth(int healthValue);
 
+	/** Setter for the current amount of ammo. */
 	UFUNCTION(BlueprintCallable, Category = "Ammo")
 	void SetAmmo(int ammoValule);
 
+	/** Number of seconds between shots */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	float fireRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	/** Sound to play when the user dies */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	class USoundBase* DeathSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Footstep)
+	/** Sound to play when the user takes a step */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	class USoundBase* FootStep;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Footstep)
+	/** Number of seconds between footstep sounds. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	float footStepRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Footstep)
+	/** Mimimum velocity the player must be moving to trigger footsteps. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	float footStepMinVelocity;
 
+	/** Called once every `footStepRate` seconds. */
 	UFUNCTION()
 	void OnFootstep();
 
+	/** Called by UGameplayStatics::ApplyPointDamage */
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	/** Called when the user should die. Only runs on the server. */
 	UFUNCTION(Server, Reliable)
 	void Die();
 
@@ -150,51 +166,61 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	int MaxHealth;
 
+	/** The max amount of ammo the user can have. */
 	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
-	int ClipSize = 6;
+	int ClipSize;
 
+	/** If Health <= NotifyAtHealth then set the PersonalLight's color to LowHealthColor */
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	int NotifyAtHealth;
 
+	/** The default color of PersonalLight */
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	FLinearColor FullHeathColor;
 
+	/** The color of PersonalLight when the user runs low on health. */
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	FLinearColor LowHealthColor;
 
-	/** The player's current health. When reduced to 0, they are considered dead.*/
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
-	int CurrentHealth;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Ammo)
-	int Ammo;
-
-
-	/** RepNotify for changes made to current health.*/
-	UFUNCTION()
-	void OnRep_CurrentHealth();
-
-	UFUNCTION()
-	void OnRep_Ammo();
-
-
-	UFUNCTION(NetMulticast, Reliable)
-	void DieAnimation(const FString& name);
-
-	void Tick(float deltaTime) override;
 
 protected:
 	UFUNCTION(Server, Reliable)
 	void DoFire();
 
 	UFUNCTION(NetMulticast, Reliable)
+	void DieAnimation(const FString& name);
+
+	UFUNCTION(NetMulticast, Reliable)
 	void DoFireAnimation();
 
+	/** Called when the amount of health changes */
 	void OnHealthUpdate();
+
+	/** Called when the amount of ammo changes */
 	void OnAmmoUpdate();
 
 private:
+	/** Records the amount of time, in seconds, since the user last shoot. Used for fire delay */
 	float timeSinceLastShot;
+
+	/** Used by unreal to call OnFootstep at regular intervals */
 	FTimerHandle footstepHandler;
+
+	/** Current amount of ammo the player has */
+	UPROPERTY(ReplicatedUsing = OnRep_Ammo)
+	int Ammo;
+
+	/** The player's current health. When reduced to 0, they are considered dead.*/
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
+	int CurrentHealth;
+
+	/** RepNotify for changes made to current health.*/
+	UFUNCTION()
+	void OnRep_CurrentHealth();
+
+	/** Changes have been made to the current ammo */
+	UFUNCTION()
+	void OnRep_Ammo();
 };
 
