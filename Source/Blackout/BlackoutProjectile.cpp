@@ -33,6 +33,15 @@ ABlackoutProjectile::ABlackoutProjectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = true;
 
+	// Create Local Flashlight
+	Light = CreateDefaultSubobject<UPointLightComponent>(TEXT("Light"));
+	Light->SetIsReplicated(true);
+	Light->Intensity = DefaultLightIntensity;
+	Light->SetAttenuationRadius(DefaultLightAttenuationRadius);
+	Light->SetupAttachment(RootComponent);
+	Light->SetLightColor(DefaultLightingColor);
+	Light->bVisible = true;
+
 	// Die after 3 seconds by default
 	InitialLifeSpan = 1.0f;
 }
@@ -60,4 +69,9 @@ void ABlackoutProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor
 	else {
 		SetLifeSpan(.2f);
 	}
+}
+
+void ABlackoutProjectile::SetLightColor(FLinearColor color)
+{
+	Light->SetLightColor(color);
 }

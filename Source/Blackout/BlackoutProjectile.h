@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/DamageType.h"
+#include "Components/PointLightComponent.h"
 #include "BlackoutProjectile.generated.h"
 
 UCLASS(config=Game)
@@ -18,6 +19,10 @@ class ABlackoutProjectile : public AActor
 
 	UPROPERTY(EditAnywhere, Category = Projectile)
 	float Speed = 10000.f;
+
+	UPROPERTY(VisibleAnywhere, Category = Visual)
+	class UPointLightComponent* Light;
+
 
 	/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
@@ -39,5 +44,17 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	class USoundBase* DissipateSound;
+
+	UPROPERTY(EditAnywhere, Category = Visual)
+	FLinearColor DefaultLightingColor = FLinearColor::White;
+
+	UPROPERTY(EditAnywhere, Category = Visual)
+	float DefaultLightAttenuationRadius = 2500;
+
+	UPROPERTY(EditAnywhere, Category = Visual)
+	float DefaultLightIntensity = 50000;
+
+	UFUNCTION(BlueprintCallable, Category = Visual)
+	void SetLightColor(FLinearColor color);
 };
 

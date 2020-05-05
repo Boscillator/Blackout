@@ -233,7 +233,12 @@ void ABlackoutCharacter::DoFire_Implementation()
 		ActorSpawnParams.Owner = this;
 
 		// spawn the projectile at the muzzle
-		World->SpawnActor<ABlackoutProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		ABlackoutProjectile* projectile = World->SpawnActor<ABlackoutProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+		if (GetAmmo() == 1) {
+			// Last shot
+			projectile->SetLightColor(LastShotColor);
+		}
 
 		// Decrease the players ammo by one
 		SetAmmo(GetAmmo() - 1);
