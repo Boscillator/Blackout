@@ -383,6 +383,12 @@ void ABlackoutCharacter::Tick(float deltaTime) {
 	timeSinceLastShot += deltaTime;
 }
 
+void ABlackoutCharacter::Jump()
+{
+	Super::Jump();
+	ServerJump();
+}
+
 void ABlackoutCharacter::OnFootstep() {
 	// Called at regular intervals to play footsteps.
 
@@ -401,6 +407,18 @@ void ABlackoutCharacter::OnRep_CurrentHealth()
 void ABlackoutCharacter::OnRep_Ammo()
 {
 	OnAmmoUpdate();
+}
+
+void ABlackoutCharacter::ServerJump_Implementation()
+{
+	DoJumpAnimation();
+}
+
+void ABlackoutCharacter::DoJumpAnimation_Implementation()
+{
+	if (JumpSound != NULL) {
+		UGameplayStatics::PlaySoundAtLocation(this, JumpSound, GetActorLocation());
+	}
 }
 
 void ABlackoutCharacter::OnHealthUpdate()

@@ -45,6 +45,8 @@ protected:
 	/** Called once every tick */
 	void Tick(float deltaTime) override;
 
+	void Jump() override;
+
 public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -204,10 +206,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
 	class USoundBase* OutOfAmmoSound;
 
+	/** Sound to play when the player jumps */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	class USoundBase* JumpSound;
+
 	UFUNCTION(NetMulticast, Reliable)
 	void OutOfAmmoAnimation();
 
+	/** Called on the server when a player jumps */
+	UFUNCTION(Server, Reliable)
+	void ServerJump();
 
+	/** Called on all clients when a player jumps */
+	UFUNCTION(NetMulticast, Reliable)
+	void DoJumpAnimation();
 
 protected:
 	UFUNCTION(Server, Reliable)
