@@ -132,6 +132,22 @@ void ABlackoutCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& 
 //////////////////////////////////////////////////////////////////////////
 // Input
 
+void ABlackoutCharacter::Pause()
+{
+	if (APlayerController* playerController = dynamic_cast<APlayerController*>(GetController())) {
+		if (ABlackoutHUD* hud = dynamic_cast<ABlackoutHUD*>(playerController->GetHUD())) {
+			hud->TogglePaused();
+			paused = !paused;
+		}
+		else {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!Must use ABlackoutHud in pause. Tell Fred if you ever see this message."));
+		}
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("!!!Tried to pause for non-player pawn. Tell Fred if you ever see this message."));
+	}
+}
+
 void ABlackoutCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// All auto generated stuff that just works
@@ -153,14 +169,19 @@ void ABlackoutCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("Turn", this, &ABlackoutCharacter::Turn);
 	PlayerInputComponent->BindAxis("TurnRate", this, &ABlackoutCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &ABlackoutCharacter::LookUp);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ABlackoutCharacter::LookUpAtRate);
+
+	PlayerInputComponent->BindAction("Pause", IE_Pressed, this, &ABlackoutCharacter::Pause);
 }
 
 void ABlackoutCharacter::OnFire()
 {
+	if (paused) {
+		return;
+	}
 
 	if (GetAmmo() <= 0) {
 		// No ammo, can't shoot
@@ -250,14 +271,40 @@ void ABlackoutCharacter::MoveRight(float Value)
 
 void ABlackoutCharacter::TurnAtRate(float Rate)
 {
+	if (paused) {
+		return;
+	}
+
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
 void ABlackoutCharacter::LookUpAtRate(float Rate)
 {
+	if (paused) {
+		return;
+	}
+
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ABlackoutCharacter::Turn(float val)
+{
+	if (paused) {
+		return;
+	}
+
+	AddControllerYawInput(val);
+}
+
+void ABlackoutCharacter::LookUp(float val)
+{
+	if (paused) {
+		return;
+	}
+
+	AddControllerPitchInput(val);
 }
 
 

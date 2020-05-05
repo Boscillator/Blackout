@@ -20,6 +20,15 @@ public:
 
 	void DrawGameOver();
 
+	UFUNCTION(BlueprintCallable)
+	void ShowPauseMenu();
+
+	UFUNCTION(BlueprintCallable)
+	void HidePauseMenu();
+
+	void TogglePaused();
+	
+
 protected:
 	void BeginPlay() override;
 
@@ -28,6 +37,12 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	class UUserWidget* CurrentWidget;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> MenuWidgetClass;
+
+	UPROPERTY(EditAnywhere)
+	class UUserWidget* MenuWidget;
 
 private:
 
@@ -42,5 +57,7 @@ private:
 	bool drawGameOver = false;
 	FTimerHandle gameOverTimerHandle;
 
+	/** True when the pause menu is shown */
+	bool paused = false;
 };
 

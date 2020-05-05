@@ -87,7 +87,7 @@ void ABlackoutHUD::DrawGameOver()
 void ABlackoutHUD::ShowPauseMenu()
 {
 	if (MenuWidget != nullptr) {
-		UWidgetBlueprintLibrary::SetInputMode_GameAndUI(GetOwningPlayerController(), MenuWidget);
+		UWidgetBlueprintLibrary::SetInputMode_UIOnly(GetOwningPlayerController(), MenuWidget);
 		MenuWidget->AddToViewport();
 	}
 	GetOwningPlayerController()->bShowMouseCursor = true;

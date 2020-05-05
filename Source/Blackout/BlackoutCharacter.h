@@ -92,6 +92,14 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
+
+	void Turn(float rate);
+	void LookUp(float val);
+
+	/**
+	* Called when the pause key is pressed
+	*/
+	void Pause();
 	
 protected:
 	// APawn interface
@@ -203,6 +211,9 @@ protected:
 private:
 	/** Records the amount of time, in seconds, since the user last shoot. Used for fire delay */
 	float timeSinceLastShot;
+
+	/** True if the pause menu is shown, and the player shouldn't respond to inputs */
+	bool paused;
 
 	/** Used by unreal to call OnFootstep at regular intervals */
 	FTimerHandle footstepHandler;
