@@ -437,8 +437,18 @@ void ABlackoutCharacter::SetAmmo(int ammoValue)
 		if (0 <= ammoValue && ammoValue <= ClipSize) {
 			Ammo = ammoValue;
 		}
+		if (Ammo <= 0) {
+			OutOfAmmoAnimation();
+		}
 		OnAmmoUpdate();
 	}
 }
 
 void ABlackoutCharacter::OnAmmoUpdate() {}
+
+void ABlackoutCharacter::OutOfAmmoAnimation_Implementation() {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Out of Ammo");
+	if (OutOfAmmoSound != NULL) {
+		UGameplayStatics::PlaySoundAtLocation(this, OutOfAmmoSound, GetActorLocation());
+	}
+}

@@ -196,6 +196,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	FLinearColor LowHealthColor;
 
+	/** Sound to play when the player runs out of ammo */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Sound)
+	class USoundBase* OutOfAmmoSound;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void OutOfAmmoAnimation();
+
 
 
 protected:
